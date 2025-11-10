@@ -1,0 +1,13 @@
+services:
+  api:
+    image: ticker-price-system-api:dev
+    build:
+      context: .
+      target: dev
+    command: python -m debugpy --listen 0.0.0.0:5678 -m uvicorn src.entrypoints.api.main:app --host 0.0.0.0 --port 8000 --reload --no-access-log --log-level debug
+    volumes:
+      - ./src:/app/src
+    ports:
+      - "8000:8000"
+      - "5678:5678"
+    restart: "no"

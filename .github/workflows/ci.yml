@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Code and Docker checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      LOG_LEVEL: info
+      GRAFANA_ADMIN_USER: admin
+      GRAFANA_ADMIN_PASSWORD: admin
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - name: Install dependencies
+        run: poetry install --no-root
+
+      - name: Check Poetry project
+        run: poetry check
+
+      - name: Lint
+        run: poetry run ruff check .
+
+      - name: Typecheck
+        run: poetry run mypy src
+
+      - name: Test
+        run: poetry run pytest
+
+      - name: Validate prod compose
+        run: docker compose config
+
+      - name: Validate local compose
+        run: docker compose -f docker-compose.yml -f docker-compose.local.yml config
+
+      - name: Build runtime Docker image
+        run: docker build --target runtime -t ticker-price-system-api:ci .

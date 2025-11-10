@@ -1,0 +1,14 @@
+repos:
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff
+        entry: poetry run ruff check .
+        language: system
+        pass_filenames: false
+
+      - id: mypy
+        name: mypy
+        entry: poetry run mypy --explicit-package-bases src
+        language: system
+        pass_filenames: false
